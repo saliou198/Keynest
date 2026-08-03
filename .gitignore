@@ -1,2 +1,4 @@
 vault.enc
 .commandcode/taste/taste.md
+__pycache__
+*pyc
