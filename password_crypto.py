@@ -11,27 +11,27 @@ import random
 
 VAULT_FILE = "vault.enc"
 
-# ---------- Argon2id : mot de passe maître -> clé AES-256 ----------
+# ---------- Argon2id: master password -> AES-256 key ----------
 
 def derive_key(master_password: str, salt: bytes) -> bytes:
-    """Dérive une clé de 32 octets (AES-256) à partir du mot de passe maître."""
+    """Derives a 32-byte key (AES-256) from the master password."""
     return hash_secret_raw(
         secret=master_password.encode(),
         salt=salt,
-        time_cost=3,        # nombre d'itérations
-        memory_cost=65536,  # 64 Mo de RAM utilisés (ralentit le brute-force)““
+        time_cost=3,        # number of iterations
+        memory_cost=65536,  # 64 MB of RAM used (slows down brute-force)
         parallelism=4,
-        hash_len=32,        # 32 octets = 256 bits pour AES-256
+        hash_len=32,        # 32 bytes = 256 bits for AES-256
         type=Type.ID,       # Argon2id
     )
 
 
-# ---------- AES-256-GCM : chiffrer / déchiffrer le vault ----------
+# ---------- AES-256-GCM: encrypt / decrypt the vault ----------
 
 
 def encrypt_vault(data: dict, key: bytes) -> tuple[bytes, bytes]:
     aesgcm = AESGCM(key)
-    nonce = os.urandom(12)  # nonce unique à chaque chiffrement, jamais réutilisé
+    nonce = os.urandom(12)  # unique nonce for each encryption, never reused
     plaintext = json.dumps(data).encode()
     ciphertext = aesgcm.encrypt(nonce, plaintext, associated_data=None)
     return nonce, ciphertext
@@ -44,7 +44,7 @@ def decrypt_vault(nonce: bytes, ciphertext: bytes, key: bytes) -> dict:
     return json.loads(plaintext.decode())
 
 
-# ---------- Persistance sur disque ----------
+# ---------- Disk persistence ----------
 
 def save_vault_file(salt: bytes, nonce: bytes, ciphertext: bytes):
     with open(VAULT_FILE, "w") as f:
@@ -66,9 +66,9 @@ def load_vault_file() -> dict:
 
 
 
-# -----------Quality of life :peace and love
+# ----------- Quality of life :peace and love ----------
 def website_searcher(website: str, passwords: dict):
-    """Cherche le site le plus proche parmi les sites déjà enregistrés."""
+    """Searches for the closest matching site among already saved sites."""
     word_list = list(passwords.keys())
     matches = difflib.get_close_matches(website.lower(), [w.lower() for w in word_list], n=4, cutoff=0.6)
     match_list = []
@@ -80,15 +80,15 @@ def website_searcher(website: str, passwords: dict):
                 if site.lower() == match:
                     match_list.append(match)
         return match_list
-    print("Aucune correspondance trouvée.")
+    print("No match found.")
     return None
 
 def hide_password(password: str, passwords: dict) -> str:
-    """Masque le mot de passe en affichant des étoiles."""
+    """Masks the password by displaying asterisks."""
     return "*" * len(password)
 
 
-# ---------- Logique
+# ---------- Logic ----------
 def create_new_vault(master_password: str) -> tuple[dict, bytes]:
     salt = os.urandom(16)
     key = derive_key(master_password, salt)
@@ -97,46 +97,46 @@ def create_new_vault(master_password: str) -> tuple[dict, bytes]:
     return {}, key
 
 def randomChar_generator() -> str:
-      # 1. Toutes les lettres (Minuscules + Majuscules)
+      # 1. All letters (lowercase + uppercase)
       LETERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-      # 2. Tous les chiffres
+      # 2. All digits
       NUMBERS = "0123456789"
 
-      # 3. Tous les symboles ASCII de ponctuation
+      # 3. All ASCII punctuation symbols
       SYMBOLES = r"""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
 
       ALL_CHARS = LETERS + NUMBERS + SYMBOLES
       return random.choice(ALL_CHARS)
 
 def unlock_vault(master_password: str) -> tuple[dict, bytes]:
-    """Retourne (données déchiffrées, clé). Lève une exception si mot de passe faux."""
+    """Returns (decrypted data, key). Raises an exception if password is wrong."""
     stored = load_vault_file()
     key = derive_key(master_password, stored["salt"])
-    # Si le mot de passe est faux, InvalidTag est levée ici -> pas d'accès aux données.
+    # If the password is wrong, InvalidTag is raised here -> no access to data.
     data = decrypt_vault(stored["nonce"], stored["ciphertext"], key)
     return data, key
 
 
 def persist_vault(passwords: dict, key: bytes):
-    """Re-chiffre et sauvegarde après chaque modification."""
-    stored = load_vault_file()  # on garde le même salt
+    """Re-encrypts and saves after each modification."""
+    stored = load_vault_file()  # keep the same salt
     nonce, ciphertext = encrypt_vault(passwords, key)
     save_vault_file(stored["salt"], nonce, ciphertext)
 
 
 def add_password(passwords: dict, key: bytes):
     site = input("Site (ex: github.com): ")
-    username = input("Utilisateur: ")
-    choice = input("Générer un mot de passe aléatoire? (y/n): ")
+    username = input("Username: ")
+    choice = input("Generate a random password? (y/n): ")
     if choice.lower() == "y":
         password = generate_password()
-        print(f"Mot de passe généré: {password}")
+        print(f"Generated password: {password}")
     else:
-        password = getpass("Mot de passe: ")
+        password = getpass("Password: ")
     passwords[site] = {"username": username, "password": password}
     persist_vault(passwords, key)
-    print(f"Mot de passe pour '{site}' sauvegardé (chiffré).")
+    print(f"Password for '{site}' saved (encrypted).")
 
 
 def modify_password(passwords: dict, key: bytes):
@@ -147,46 +147,46 @@ def modify_password(passwords: dict, key: bytes):
         if len(match) > 1:
             for i in range(len(match)):
                 print(f"{i + 1}. {match[i]}")
-            choice = int(input("Choisissez un site: "))
+            choice = int(input("Choose a site: "))
             site = match[choice - 1]
         else:
             site = match[0]
     elif match is None:
-        print(f"Site '{site}' non trouvé.")
+        print(f"Site '{site}' not found.")
         return
 
     site = match
-    username = input("Utilisateur: ")
-    password = getpass("Mot de passe: ")
+    username = input("Username: ")
+    password = getpass("Password: ")
     passwords[site] = {"username": username, "password": password}
     persist_vault(passwords, key)
-    print(f"Mot de passe pour '{site}' modifié (chiffré).")
+    print(f"Password for '{site}' modified (encrypted).")
 
 
 def view_passwords(passwords: dict):
     if not passwords:
-        print("Aucun mot de passe stocké.")
+        print("No passwords stored.")
         return
-    print("\n--- Mots de passe ---")
+    print("\n--- Passwords ---")
     for site, creds in passwords.items():
         print(f"Site: {site}")
-        print(f"  Utilisateur: {creds['username']}")
-        print(f"  Mot de passe: {hide_password(creds['password'], passwords)}")
-    choice = input("vous voulez voire les mots de passe o/n: ")
+        print(f"  Username: {creds['username']}")
+        print(f"  Password: {hide_password(creds['password'], passwords)}")
+    choice = input("Do you want to see the passwords? (y/n): ")
     if choice.lower() == "oui" or choice.lower() == "o" or choice.lower() == "y":
         for site, creds in passwords.items():
                 print(f"Site: {site}")
-                print(f"  Utilisateur: {creds['username']}")
-                print(f"  Mot de passe: {(creds['password'], passwords)}")
+                print(f"  Username: {creds['username']}")
+                print(f"  Password: {(creds['password'], passwords)}")
 
 def change_master_password(passwords: dict, old_key: bytes):
     old_salt = load_vault_file()["salt"]
-    new_master_password = getpass("Nouveau mot de passe maître: ")
+    new_master_password = getpass("New master password: ")
     new_salt = os.urandom(16)
     new_key = derive_key(new_master_password, new_salt)
     nonce, ciphertext = encrypt_vault(passwords, new_key)
     save_vault_file(new_salt, nonce, ciphertext)
-    print("Mot de passe maître changé avec succès.")
+    print("Master password changed successfully.")
     return new_key
 
 def generate_password():
@@ -198,27 +198,27 @@ def generate_password():
 
 def main():
     if not os.path.exists(VAULT_FILE):
-        print("Aucun vault trouvé, création d'un nouveau vault.")
-        master_password = getpass("Choisis un mot de passe maître: ")
+        print("No vault found, creating a new vault.")
+        master_password = getpass("Choose a master password: ")
         passwords, key = create_new_vault(master_password)
     else:
-        master_password = getpass("Entre ton mot de passe maître: ")
+        master_password = getpass("Enter your master password: ")
         try:
             passwords, key = unlock_vault(master_password)
         except InvalidTag:
-            print("Mot de passe incorrect.")
+            print("Incorrect password.")
             return
 
     while True:
         print("\n--- Password Manager ---")
-        print("1. Ajouter un mot de passe")
-        print("2. Voir tous les mots de passe")
-        print("3. Modifier un mot de passe")
-        print("4. Modifier le mot de passe maître")
+        print("1. Add a password")
+        print("2. View all passwords")
+        print("3. Modify a password")
+        print("4. Change master password")
         print("5. Generate a password")
-        print("6. Quitter")
+        print("6. Exit")
 
-        choice = input("Choix: ")
+        choice = input("Choice: ")
 
         if choice == "1":
             add_password(passwords, key)
@@ -231,12 +231,12 @@ def main():
 
         elif choice == "5":
             generated_password = generate_password()
-            print(f"Mot de passe généré: {generated_password}")
+            print(f"Generated password: {generated_password}")
         elif choice == "6":
-            print("Déconnecté. Clé effacée de la mémoire.")
+            print("Logged out. Key wiped from memory.")
             break
         else:
-            print("Choix invalide.")
+            print("Invalid choice.")
 
 
 if __name__ == "__main__":
