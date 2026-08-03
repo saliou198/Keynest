@@ -68,19 +68,15 @@ def load_vault_file() -> dict:
 
 # ----------- Quality of life :peace and love ----------
 def website_searcher(website: str, passwords: dict):
-    """Searches for the closest matching site among already saved sites."""
+
     word_list = list(passwords.keys())
-    matches = difflib.get_close_matches(website.lower(), [w.lower() for w in word_list], n=4, cutoff=0.6)
-    match_list = []
+    matches = difflib.get_close_matches(website.lower(), [w.lower() for w in word_list], n=5, cutoff=0.6)
+
     if matches:
+
         for site in word_list:
             if site.lower() == matches[0]:
                 return site
-            for match in matches[1:]:
-                if site.lower() == match:
-                    match_list.append(match)
-        return match_list
-    print("No match found.")
     return None
 
 def hide_password(password: str, passwords: dict) -> str:
@@ -105,8 +101,9 @@ def randomChar_generator() -> str:
 
       # 3. All ASCII punctuation symbols
       SYMBOLES = r"""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
+      RANDOMSH = "jndanz_&""&u_u&j&jk&,d,alkd,zalkj&ojdaùùù%%¨Pǜl:p0i901309109101840191ip1kmm.§mpkm?/?/n.?n.n.nxn"
 
-      ALL_CHARS = LETERS + NUMBERS + SYMBOLES
+      ALL_CHARS = LETERS + NUMBERS + SYMBOLES + RANDOMSH
       return random.choice(ALL_CHARS)
 
 def unlock_vault(master_password: str) -> tuple[dict, bytes]:
@@ -127,7 +124,23 @@ def persist_vault(passwords: dict, key: bytes):
 
 def add_password(passwords: dict, key: bytes):
     site = input("Site (ex: github.com): ")
-    username = input("Username: ")
+    if site in passwords:
+        print(f"Site '{site}' already exists.")
+        print("1. Update existing password: ")
+        print("2. Delete existing password: ")
+        print("3.Add an account in the same website: ")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+              username = input("Username: ")
+        elif choice == "2":
+            del passwords[site]
+            persist_vault(passwords, key)
+            return
+        elif choice == "3":
+            purpose = input("What is the purpose of this account? ex(Professional): ")
+            username = input("Username: ")
+            username = username + "(" + purpose + ")"
+
     choice = input("Generate a random password? (y/n): ")
     if choice.lower() == "y":
         password = generate_password()
@@ -141,21 +154,15 @@ def add_password(passwords: dict, key: bytes):
 
 def modify_password(passwords: dict, key: bytes):
     site = input("Site whose password to modify: ")
-
-    match = website_searcher(site, passwords)
-    if type(match) is list:
-        if len(match) > 1:
-            for i in range(len(match)):
-                print(f"{i + 1}. {match[i]}")
-            choice = int(input("Choose a site: "))
-            site = match[choice - 1]
+    if site not in passwords:
+        match = website_searcher(site, passwords)
+        choice = input(f"Did you mean: {match} (y/n): ")
+        if choice.lower() == "y":
+            site = match
         else:
-            site = match[0]
-    elif match is None:
-        print(f"Site '{site}' not found.")
-        return
+            print(f"Site '{site}' not found.")
+            return
 
-    site = match
     username = input("Username: ")
     password = getpass("Password: ")
     passwords[site] = {"username": username, "password": password}
@@ -177,11 +184,14 @@ def view_passwords(passwords: dict):
         for site, creds in passwords.items():
                 print(f"Site: {site}")
                 print(f"  Username: {creds['username']}")
-                print(f"  Password: {(creds['password'], passwords)}")
+                print(f"  Password: {(creds['password'])}")
 
-def change_master_password(passwords: dict, old_key: bytes):
-    old_salt = load_vault_file()["salt"]
+def change_master_password(passwords: dict):
     new_master_password = getpass("New master password: ")
+    confirm_new_password = getpass("Confirm new master password: ")
+    if new_master_password != confirm_new_password:
+        print("Passwords do not match.")
+        return
     new_salt = os.urandom(16)
     new_key = derive_key(new_master_password, new_salt)
     nonce, ciphertext = encrypt_vault(passwords, new_key)
@@ -191,7 +201,7 @@ def change_master_password(passwords: dict, old_key: bytes):
 
 def generate_password():
     password = ""
-    for _ in range(16):
+    for _ in range(20):
         password += randomChar_generator()
     return password
 
@@ -227,7 +237,7 @@ def main():
         elif choice == "3":
             modify_password(passwords, key)
         elif choice == "4":
-            key = change_master_password(passwords, key)
+            key = change_master_password(passwords)
 
         elif choice == "5":
             generated_password = generate_password()
