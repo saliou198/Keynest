@@ -1,77 +1,88 @@
 # Password Manager
 
-CLI de gestion de mots de passe chiffré avec **AES-256-GCM** + **Argon2id**.
+Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 
-## Fonctionnalités
+## Features
 
-- 🔐 Chiffrement AES-256-GCM avec nonce unique par sauvegarde
-- 🧂 Dérivation de clé via Argon2id (64 MB RAM, 3 itérations)
-- 🔍 Recherche approximative (fuzzy matching) des sites
-- 🎲 Générateur de mots de passe aléatoires (20 caractères, lettres + chiffres + symboles)
-- 👁️ Masquage des mots de passe à l'affichage
-- 🔑 Changement de mot de passe maître
+- 🔐 AES-256-GCM encryption with a unique nonce per save
+- 🧂 Key derivation via Argon2id (64 MB RAM, 3 iterations)
+- 🔍 Fuzzy search for website names
+- 🎲 Random password generator (20 chars: letters + digits + symbols)
+- 👁️ Password masking on display
+- 🔑 Master password change
 
 ## Installation
 
+### Linux / macOS
+
 ```bash
-git clone <url-du-repo>
+git clone git@github.com:saliou198/password-manager.git
 cd password-manager
 python -m venv venv
-source venv/bin/activate        # Linux/macOS
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Utilisation
+### Windows
 
-### Mode CLI (Typer)
+```powershell
+git clone git@github.com:saliou198/password-manager.git
+cd password-manager
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Usage
+
+### CLI mode (Typer)
 
 ```bash
 python cli.py --help
 
-# Créer/lister/ajouter
-python cli.py view              # Affiche les mots de passe (masqués)
-python cli.py add               # Ajouter un compte
-python cli.py modify            # Modifier un compte
-python cli.py generate          # Générer un mot de passe aléatoire
-python cli.py change-master     # Changer le mot de passe maître
+python cli.py view              # Show stored passwords (masked)
+python cli.py add               # Add a new account
+python cli.py modify            # Modify an existing account
+python cli.py generate          # Generate a random password
+python cli.py change-master     # Change the master password
 ```
 
-Au premier lancement, le vault `vault.enc` est créé automatiquement.
+On first run, the vault file `vault.enc` is created automatically.
 
-### Mode interactif (fallback)
+### Interactive mode (fallback)
 
 ```bash
 python password_crypto.py
 ```
 
-Menu texte classique avec les mêmes opérations.
+Classic text menu with the same operations.
 
-## Structure
+## Project structure
 
 ```
 password-manager/
-├── cli.py              # Interface Typer
-├── password_crypto.py  # Logique métier + chiffrement
-├── requirements.txt    # Dépendances
-└── vault.enc           # Fichier de stockage chiffré (généré au 1er lancement)
+├── cli.py              # Typer interface
+├── password_crypto.py  # Business logic + encryption
+├── requirements.txt    # Dependencies
+└── vault.enc           # Encrypted vault file (created on 1st run)
 ```
 
-## Sécurité
+## Security
 
-| Élément | Détail |
-|--------|--------|
-| Chiffrement | AES-256-GCM (authentifié) |
-| Dérivation de clé | Argon2id — 64 MB RAM, parallélisme 4 |
-| Nonce | 96 bits aléatoires, régénérés à chaque sauvegarde |
-| Stockage | Fichier JSON encodé en base64 |
+| Component | Detail |
+|-----------|--------|
+| Encryption | AES-256-GCM (authenticated) |
+| Key derivation | Argon2id — 64 MB RAM, parallelism 4 |
+| Nonce | 96-bit random, regenerated on every save |
+| Storage | Base64-encoded JSON file |
 
-## ⚠️ Bugs connus
+## ⚠️ Known bugs
 
-- **`delete` indisponible** — La commande `python cli.py delete` lève une `AttributeError` car `delete_password()` n'a pas encore été implémentée dans `password_crypto.py`.
-- **Un seul compte par site** — La structure `{site: {username, password}}` ne supporte qu'une entrée par site. L'option "Add account in same website" écrase l'entrée précédente.
-- **Fuzzy match sur `None`** — Si `website_searcher` ne trouve rien, `modify_password` affiche `"Did you mean: None (y/n)"`.
-- **Mode interactif** — `change_master_password` retourne `None` dans `main()` si les mots de passe ne correspondent pas, rendant la clé invalide pour les opérations suivantes.
+- **`delete` unavailable** — `python cli.py delete` raises an `AttributeError` because `delete_password()` hasn't been implemented yet in `password_crypto.py`.
+- **One account per site** — The `{site: {username, password}}` structure only supports one entry per site. The "Add account in same website" option overwrites the previous entry.
+- **Fuzzy match on `None`** — When `website_searcher` finds nothing, `modify_password` displays `"Did you mean: None (y/n)"`.
+- **Interactive mode** — `change_master_password` returns `None` in `main()` when passwords don't match, making the key invalid for subsequent operations.
 
-## Licence
+## License
 
-MIT — faites-en ce que vous voulez.
+MIT — do whatever you want with it.
