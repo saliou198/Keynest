@@ -152,6 +152,25 @@ def add_password(passwords: dict, key: bytes):
     persist_vault(passwords, key)
     print(f"Password for '{site}' saved (encrypted).")
 
+def delete_password(passwords: dict, key: bytes):
+    site = input("Site whose password to delete: ")
+    if site not in passwords:
+        match = website_searcher(site, passwords)
+        if match == None:
+            print(f"Site '{site}' not found.")
+            return
+        choice = input(f"Did you mean: {match} (y/n): ")
+        if choice.lower() == "y":
+            site = match
+        else:
+            print(f"Site '{site}' not found.")
+            return
+    achoice = input(f"Are you sure you want to delete the password for '{site}'? (y/n): ")
+    if achoice.lower() == "y":
+        del passwords[site]
+        persist_vault(passwords, key)
+        print(f"Password for '{site}' deleted.")
+
 
 def modify_password(passwords: dict, key: bytes):
     site = input("Site whose password to modify: ")
