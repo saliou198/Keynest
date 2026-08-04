@@ -6,8 +6,7 @@ from argon2.low_level import hash_secret_raw, Type
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 from getpass import getpass
-import sqlite3
-import random
+import secrets
 
 VAULT_FILE = "vault.enc"
 
@@ -42,7 +41,6 @@ def decrypt_vault(nonce: bytes, ciphertext: bytes, key: bytes) -> dict:
     aesgcm = AESGCM(key)
     plaintext = aesgcm.decrypt(nonce, ciphertext, associated_data=None)
     return json.loads(plaintext.decode())
-
 
 # ---------- Disk persistence ----------
 
@@ -101,10 +99,10 @@ def randomChar_generator() -> str:
 
       # 3. All ASCII punctuation symbols
       SYMBOLES = r"""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
-      RANDOMSH = "jndanz_&""&u_u&j&jk&,d,alkd,zalkj&ojdaùùù%%¨Pǜl:p0i901309109101840191ip1kmm.§mpkm?/?/n.?n.n.nxn"
 
-      ALL_CHARS = LETERS + NUMBERS + SYMBOLES + RANDOMSH
-      return random.choice(ALL_CHARS)
+
+      ALL_CHARS = LETERS + NUMBERS + SYMBOLES
+      return secrets.choice(ALL_CHARS)
 
 def unlock_vault(master_password: str) -> tuple[dict, bytes]:
     """Returns (decrypted data, key). Raises an exception if password is wrong."""
@@ -140,6 +138,9 @@ def add_password(passwords: dict, key: bytes):
             purpose = input("What is the purpose of this account? ex(Professional): ")
             username = input("Username: ")
             username = username + "(" + purpose + ")"
+    else:
+        username = input("Username: ")
+
 
     choice = input("Generate a random password? (y/n): ")
     if choice.lower() == "y":
