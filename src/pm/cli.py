@@ -14,6 +14,10 @@ def _unlock():
     if not os.path.exists(pwm.VAULT_FILE):
         typer.echo("No vault found, creating a new one.")
         master = getpass("Choose a master password: ")
+        confirm = getpass("Confirm master password: ")
+        if master != confirm:
+            typer.echo("Passwords do not match.")
+            raise typer.Exit(1)
         return pwm.create_new_vault(master)
 
     master = getpass("Enter your master password: ")
@@ -67,13 +71,12 @@ def generate():
 def change_master():
     """Change the vault master password."""
     _state["passwords"], _state["key"] = _unlock()
-    new_key = pwm.change_master_password(_state["passwords"])
-    if new_key is not None:
+    try:
+        new_key = pwm.change_master_password(_state["passwords"])
         _state["key"] = new_key
         typer.echo("Master password changed successfully.")
-        raise typer.Exit(0)
-    else:
-        typer.echo("Failed to change master password.")
+    except ValueError as e:
+        typer.echo(f"Error: {e}")
         raise typer.Exit(1)
 
 @app.command()

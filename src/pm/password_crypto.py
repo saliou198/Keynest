@@ -212,13 +212,11 @@ def change_master_password(passwords: dict):
     new_master_password = getpass("New master password: ")
     confirm_new_password = getpass("Confirm new master password: ")
     if new_master_password != confirm_new_password:
-        print("Passwords do not match.")
-        return
+        raise ValueError("Passwords do not match.")
     new_salt = os.urandom(16)
     new_key = derive_key(new_master_password, new_salt)
     nonce, ciphertext = encrypt_vault(passwords, new_key)
     save_vault_file(new_salt, nonce, ciphertext)
-    print("Master password changed successfully.")
     return new_key
 
 def generate_password():
@@ -232,6 +230,10 @@ def main():
     if not os.path.exists(VAULT_FILE):
         print("No vault found, creating a new vault.")
         master_password = getpass("Choose a master password: ")
+        confirm = getpass("Confirm master password: ")
+        if master_password != confirm:
+            print("Passwords do not match.")
+            return
         passwords, key = create_new_vault(master_password)
     else:
         master_password = getpass("Enter your master password: ")
@@ -259,7 +261,12 @@ def main():
         elif choice == "3":
             modify_password(passwords, key)
         elif choice == "4":
-            key = change_master_password(passwords)
+            try:
+                new_key = change_master_password(passwords)
+                key = new_key
+                print("Master password changed successfully.")
+            except ValueError as e:
+                print(f"Error: {e}")
 
         elif choice == "5":
             generated_password = generate_password()
