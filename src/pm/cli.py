@@ -58,6 +58,7 @@ def delete():
 @app.command()
 def generate():
     """Generate a random password."""
+
     typer.echo(pwm.generate_password())
 
 
@@ -68,7 +69,11 @@ def change_master():
     new_key = pwm.change_master_password(_state["passwords"])
     if new_key is not None:
         _state["key"] = new_key
-
+        typer.echo("Master password changed successfully.")
+        raise typer.Exit(0)
+    else:
+        typer.echo("Failed to change master password.")
+        raise typer.Exit(1)
 
 if __name__ == "__main__":
     app()

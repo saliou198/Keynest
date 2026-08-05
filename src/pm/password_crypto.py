@@ -7,6 +7,9 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 from getpass import getpass
 import secrets
+import pyperclip
+
+pyperclip.copy("Your text here")
 
 VAULT_FILE = "vault.enc"
 
@@ -145,7 +148,8 @@ def add_password(passwords: dict, key: bytes):
     choice = input("Generate a random password? (y/n): ")
     if choice.lower() == "y":
         password = generate_password()
-        print(f"Generated password: {password}")
+        print(f"Generated password Copied to clipboard: {password}")
+        pyperclip.copy(password)
     else:
         password = getpass("Password: ")
     passwords[site] = {"username": username, "password": password}
@@ -261,7 +265,8 @@ def main():
 
         elif choice == "5":
             generated_password = generate_password()
-            print(f"Generated password: {generated_password}")
+            print(f"Generated password Copied: {generated_password}")
+            pyperclip.copy(generated_password)
         elif choice == "6":
             print("Logged out. Key wiped from memory.")
             break
