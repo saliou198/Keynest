@@ -9,8 +9,6 @@ from getpass import getpass
 import secrets
 import pyperclip
 
-pyperclip.copy("Your text here")
-
 VAULT_FILE = "vault.enc"
 
 # ---------- Argon2id: master password -> AES-256 key ----------
