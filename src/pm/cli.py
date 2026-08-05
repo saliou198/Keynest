@@ -4,6 +4,7 @@ from getpass import getpass
 from cryptography.exceptions import InvalidTag
 
 from . import password_crypto as pwm
+from .github_auth import login as github_login
 
 app = typer.Typer()
 _state = {"passwords": None, "key": None}
@@ -74,6 +75,17 @@ def change_master():
     else:
         typer.echo("Failed to change master password.")
         raise typer.Exit(1)
+
+@app.command()
+def login():
+    """Login with GitHub via device flow."""
+    try:
+        access_token, user = github_login()
+        typer.echo(f"\n✓ Logged in as @{user['login']}")
+    except Exception as e:
+        typer.echo(f"\n✗ Login failed: {e}")
+        raise typer.Exit(1)
+
 
 if __name__ == "__main__":
     app()
