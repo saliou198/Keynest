@@ -16,7 +16,7 @@ Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 ### Linux / macOS
 
 ```bash
-git clone git@github.com:saliou198/password-manager.git
+git clone https://github.com/saliou198/password-manager.git
 cd password-manager
 python3 -m venv .venv
 source .venv/bin/activate
@@ -26,7 +26,7 @@ pip install -e .
 ### Windows
 
 ```powershell
-git clone git@github.com:saliou198/password-manager.git
+git clone https://github.com/saliou198/password-manager.git
 cd password-manager
 python3 -m venv .venv
 .venv\Scripts\activate
@@ -70,12 +70,6 @@ password-manager/
 | Nonce | 96-bit random, regenerated on every save |
 | Storage | Base64-encoded JSON file |
 
-## ⚠️ Known bugs
-
-- **`delete` unavailable** — `python cli.py delete` raises an `AttributeError` because `delete_password()` hasn't been implemented yet in `password_crypto.py`.
-- **One account per site** — The `{site: {username, password}}` structure only supports one entry per site. The "Add account in same website" option overwrites the previous entry.
-- **Fuzzy match on `None`** — When `website_searcher` finds nothing, `modify_password` displays `"Did you mean: None (y/n)"`.
-- **Interactive mode** — `change_master_password` returns `None` in `main()` when passwords don't match, making the key invalid for subsequent operations.
 
 ## License
 
