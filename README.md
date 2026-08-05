@@ -1,4 +1,4 @@
-# Password Manager
+# KEYNEST
 
 Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 
@@ -16,8 +16,8 @@ Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 ### Linux / macOS
 
 ```bash
-git clone https://github.com/saliou198/password-manager.git
-cd password-manager
+git clone https://github.com/saliou198/keynest.git
+cd keynest
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
@@ -26,8 +26,8 @@ pip install -e .
 ### Windows
 
 ```powershell
-git clone https://github.com/saliou198/password-manager.git
-cd password-manager
+git clone https://github.com/saliou198/keynest.git
+cd keynest
 python3 -m venv .venv
 .venv\Scripts\activate
 pip install -e .
