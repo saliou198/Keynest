@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "password-manager"
+version = "0.1.0"
+description = "A local encrypted password manager"
+requires-python = ">=3.11"
+
+dependencies = [
+    "typer>=0.9.0",
+    "cryptography>=41.0.0",
+    "argon2-cffi>=21.3.0",
+]
+
+[project.scripts]
+pm = "pm.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]

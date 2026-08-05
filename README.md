@@ -18,9 +18,9 @@ Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 ```bash
 git clone git@github.com:saliou198/password-manager.git
 cd password-manager
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
 ```
 
 ### Windows
@@ -28,43 +28,37 @@ pip install -r requirements.txt
 ```powershell
 git clone git@github.com:saliou198/password-manager.git
 cd password-manager
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+python3 -m venv .venv
+.venv\Scripts\activate
+pip install -e .
 ```
 
 ## Usage
 
-### CLI mode (Typer)
-
 ```bash
-python cli.py --help
-
-python cli.py view              # Show stored passwords (masked)
-python cli.py add               # Add a new account
-python cli.py modify            # Modify an existing account
-python cli.py generate          # Generate a random password
-python cli.py change-master     # Change the master password
+pm --help               # Show available commands
+pm view                 # List stored passwords (masked)
+pm add                  # Add a new account
+pm modify               # Modify an existing account
+pm delete               # Delete an account
+pm generate             # Generate a random password
+pm change-master        # Change the master password
 ```
 
 On first run, the vault file `vault.enc` is created automatically.
-
-### Interactive mode (fallback)
-
-```bash
-python password_crypto.py
-```
-
-Classic text menu with the same operations.
 
 ## Project structure
 
 ```
 password-manager/
-├── cli.py              # Typer interface
-├── password_crypto.py  # Business logic + encryption
-├── requirements.txt    # Dependencies
-└── vault.enc           # Encrypted vault file (created on 1st run)
+├── pyproject.toml
+├── README.md
+├── src/
+│   └── pm/
+│       ├── __init__.py
+│       ├── cli.py              # Typer CLI interface
+│       └── password_crypto.py  # Encryption + business logic
+└── vault.enc                   # Encrypted vault file (created on 1st run)
 ```
 
 ## Security

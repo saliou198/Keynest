@@ -3,7 +3,7 @@ import typer
 from getpass import getpass
 from cryptography.exceptions import InvalidTag
 
-import password_crypto as pwm
+from . import password_crypto as pwm
 
 app = typer.Typer()
 _state = {"passwords": None, "key": None}
