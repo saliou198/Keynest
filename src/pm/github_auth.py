@@ -7,10 +7,10 @@ GITHUB_DEVICE_URL = "https://github.com/login/device/code"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_API_URL = "https://api.github.com/user"
 
-# À remplacer par le Client ID de ta GitHub App
+
 CLIENT_ID = "Iv23licLNO2jpGjrIZqK"
 
-# Pour commencer, on demande uniquement l'identité du compte GitHub.
+
 SCOPES = ["read:user"]
 
 
