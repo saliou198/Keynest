@@ -9,9 +9,7 @@ from getpass import getpass
 import secrets
 import pyperclip
 
-pyperclip.copy("Your text here")
-
-VAULT_FILE = "vault.enc"
+from .storage import StorageBackend
 
 # ---------- Argon2id: master password -> AES-256 key ----------
 
@@ -45,20 +43,20 @@ def decrypt_vault(nonce: bytes, ciphertext: bytes, key: bytes) -> dict:
     plaintext = aesgcm.decrypt(nonce, ciphertext, associated_data=None)
     return json.loads(plaintext.decode())
 
-# ---------- Disk persistence ----------
+# ---------- Vault serialization (vault bytes ↔ dict) ----------
 
-def save_vault_file(salt: bytes, nonce: bytes, ciphertext: bytes):
-    with open(VAULT_FILE, "w") as f:
-        json.dump({
-            "salt": base64.b64encode(salt).decode(),
-            "nonce": base64.b64encode(nonce).decode(),
-            "ciphertext": base64.b64encode(ciphertext).decode(),
-        }, f, indent=4)
+def dump_vault(salt: bytes, nonce: bytes, ciphertext: bytes) -> bytes:
+    """Serialize vault fields to bytes (JSON with Base64-encoded binary)."""
+    return json.dumps({
+        "salt": base64.b64encode(salt).decode(),
+        "nonce": base64.b64encode(nonce).decode(),
+        "ciphertext": base64.b64encode(ciphertext).decode(),
+    }, indent=4).encode()
 
 
-def load_vault_file() -> dict:
-    with open(VAULT_FILE, "r") as f:
-        raw = json.load(f)
+def parse_vault(data: bytes) -> dict:
+    """Deserialize vault bytes back to {salt, nonce, ciphertext}."""
+    raw = json.loads(data.decode())
     return {
         "salt": base64.b64decode(raw["salt"]),
         "nonce": base64.b64decode(raw["nonce"]),
@@ -86,11 +84,11 @@ def hide_password(password: str, passwords: dict) -> str:
 
 
 # ---------- Logic ----------
-def create_new_vault(master_password: str) -> tuple[dict, bytes]:
+def create_new_vault(master_password: str, storage: StorageBackend) -> tuple[dict, bytes]:
     salt = os.urandom(16)
     key = derive_key(master_password, salt)
     nonce, ciphertext = encrypt_vault({}, key)
-    save_vault_file(salt, nonce, ciphertext)
+    storage.upload(dump_vault(salt, nonce, ciphertext))
     return {}, key
 
 def randomChar_generator() -> str:
@@ -107,23 +105,23 @@ def randomChar_generator() -> str:
       ALL_CHARS = LETERS + NUMBERS + SYMBOLES
       return secrets.choice(ALL_CHARS)
 
-def unlock_vault(master_password: str) -> tuple[dict, bytes]:
+def unlock_vault(master_password: str, storage: StorageBackend) -> tuple[dict, bytes]:
     """Returns (decrypted data, key). Raises an exception if password is wrong."""
-    stored = load_vault_file()
+    stored = parse_vault(storage.download())
     key = derive_key(master_password, stored["salt"])
     # If the password is wrong, InvalidTag is raised here -> no access to data.
     data = decrypt_vault(stored["nonce"], stored["ciphertext"], key)
     return data, key
 
 
-def persist_vault(passwords: dict, key: bytes):
+def persist_vault(passwords: dict, key: bytes, storage: StorageBackend):
     """Re-encrypts and saves after each modification."""
-    stored = load_vault_file()  # keep the same salt
+    stored = parse_vault(storage.download())  # keep the same salt
     nonce, ciphertext = encrypt_vault(passwords, key)
-    save_vault_file(stored["salt"], nonce, ciphertext)
+    storage.upload(dump_vault(stored["salt"], nonce, ciphertext))
 
 
-def add_password(passwords: dict, key: bytes):
+def add_password(passwords: dict, key: bytes, storage: StorageBackend):
     site = input("Site (ex: github.com): ")
     if site in passwords:
         print(f"Site '{site}' already exists.")
@@ -135,7 +133,7 @@ def add_password(passwords: dict, key: bytes):
               username = input("Username: ")
         elif choice == "2":
             del passwords[site]
-            persist_vault(passwords, key)
+            persist_vault(passwords, key, storage)
             return
         elif choice == "3":
             purpose = input("What is the purpose of this account? ex(Professional): ")
@@ -153,10 +151,10 @@ def add_password(passwords: dict, key: bytes):
     else:
         password = getpass("Password: ")
     passwords[site] = {"username": username, "password": password}
-    persist_vault(passwords, key)
+    persist_vault(passwords, key, storage)
     print(f"Password for '{site}' saved (encrypted).")
 
-def delete_password(passwords: dict, key: bytes):
+def delete_password(passwords: dict, key: bytes, storage: StorageBackend):
     site = input("Site whose password to delete: ")
     if site not in passwords:
         match = website_searcher(site, passwords)
@@ -172,11 +170,11 @@ def delete_password(passwords: dict, key: bytes):
     achoice = input(f"Are you sure you want to delete the password for '{site}'? (y/n): ")
     if achoice.lower() == "y":
         del passwords[site]
-        persist_vault(passwords, key)
+        persist_vault(passwords, key, storage)
         print(f"Password for '{site}' deleted.")
 
 
-def modify_password(passwords: dict, key: bytes):
+def modify_password(passwords: dict, key: bytes, storage: StorageBackend):
     site = input("Site whose password to modify: ")
     if site not in passwords:
         match = website_searcher(site, passwords)
@@ -190,7 +188,7 @@ def modify_password(passwords: dict, key: bytes):
     username = input("Username: ")
     password = getpass("Password: ")
     passwords[site] = {"username": username, "password": password}
-    persist_vault(passwords, key)
+    persist_vault(passwords, key, storage)
     print(f"Password for '{site}' modified (encrypted).")
 
 
@@ -210,17 +208,15 @@ def view_passwords(passwords: dict):
                 print(f"  Username: {creds['username']}")
                 print(f"  Password: {(creds['password'])}")
 
-def change_master_password(passwords: dict):
+def change_master_password(passwords: dict, storage: StorageBackend):
     new_master_password = getpass("New master password: ")
     confirm_new_password = getpass("Confirm new master password: ")
     if new_master_password != confirm_new_password:
-        print("Passwords do not match.")
-        return
+        raise ValueError("Passwords do not match.")
     new_salt = os.urandom(16)
     new_key = derive_key(new_master_password, new_salt)
     nonce, ciphertext = encrypt_vault(passwords, new_key)
-    save_vault_file(new_salt, nonce, ciphertext)
-    print("Master password changed successfully.")
+    storage.upload(dump_vault(new_salt, nonce, ciphertext))
     return new_key
 
 def generate_password():
@@ -231,14 +227,21 @@ def generate_password():
 
 
 def main():
-    if not os.path.exists(VAULT_FILE):
+    from .storage import LocalStorage
+    storage = LocalStorage()
+
+    if not storage.exists():
         print("No vault found, creating a new vault.")
         master_password = getpass("Choose a master password: ")
-        passwords, key = create_new_vault(master_password)
+        confirm = getpass("Confirm master password: ")
+        if master_password != confirm:
+            print("Passwords do not match.")
+            return
+        passwords, key = create_new_vault(master_password, storage)
     else:
         master_password = getpass("Enter your master password: ")
         try:
-            passwords, key = unlock_vault(master_password)
+            passwords, key = unlock_vault(master_password, storage)
         except InvalidTag:
             print("Incorrect password.")
             return
@@ -255,13 +258,18 @@ def main():
         choice = input("Choice: ")
 
         if choice == "1":
-            add_password(passwords, key)
+            add_password(passwords, key, storage)
         elif choice == "2":
             view_passwords(passwords)
         elif choice == "3":
-            modify_password(passwords, key)
+            modify_password(passwords, key, storage)
         elif choice == "4":
-            key = change_master_password(passwords)
+            try:
+                new_key = change_master_password(passwords, storage)
+                key = new_key
+                print("Master password changed successfully.")
+            except ValueError as e:
+                print(f"Error: {e}")
 
         elif choice == "5":
             generated_password = generate_password()

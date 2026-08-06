@@ -1,4 +1,4 @@
-# KEYNEST
+# PwVault
 
 Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 
@@ -16,8 +16,8 @@ Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**.
 ### Linux / macOS
 
 ```bash
-git clone https://github.com/saliou198/keynest.git
-cd keynest
+git clone https://github.com/saliou198/pwvault.git
+cd pwvault
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
@@ -26,8 +26,8 @@ pip install -e .
 ### Windows
 
 ```powershell
-git clone https://github.com/saliou198/keynest.git
-cd keynest
+git clone https://github.com/saliou198/pwvault.git
+cd pwvault
 python3 -m venv .venv
 .venv\Scripts\activate
 pip install -e .
@@ -50,14 +50,15 @@ On first run, the vault file `vault.enc` is created automatically.
 ## Project structure
 
 ```
-password-manager/
+pwvault/
 ├── pyproject.toml
 ├── README.md
 ├── src/
 │   └── pm/
 │       ├── __init__.py
 │       ├── cli.py              # Typer CLI interface
-│       └── password_crypto.py  # Encryption + business logic
+│       ├── password_crypto.py  # Encryption + business logic
+│       └── github_auth.py      # GitHub device-flow authentication
 └── vault.enc                   # Encrypted vault file (created on 1st run)
 ```
 
