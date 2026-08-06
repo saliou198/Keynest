@@ -11,7 +11,7 @@ GITHUB_API_URL = "https://api.github.com/user"
 CLIENT_ID = "Iv23licLNO2jpGjrIZqK"
 
 
-SCOPES = ["read:user"]
+SCOPES = ["read:user", "repo"]
 
 
 def request_device_code() -> dict:

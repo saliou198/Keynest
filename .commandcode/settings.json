@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(.venv/bin/python:*)",
+      "Shell(python -c import sys; print(sys.prefix))",
+      "Shell(python -c import typer; import cryptography; import argon2; print('all deps installed') 2 >& 1)",
+      "Shell(ls:*)",
+      "Shell(pip:*)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}
