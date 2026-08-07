@@ -44,7 +44,11 @@ pm add               # Add a new account
 pm modify            # Modify an existing account
 pm delete            # Delete an account
 pm generate          # Generate a random password
-pm change-master     # Change the master password
+pm change-master      # Change the master password
+pm key add            #add new api Key
+pm key list          #list api keys
+pm key modify       #modify api key if exists
+pm key delete       #
 ```
 
 On first run, the vault file `vault.enc` is created automatically in the current directory.
