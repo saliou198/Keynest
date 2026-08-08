@@ -4,35 +4,23 @@ Encrypted password manager CLI using **AES-256-GCM** + **Argon2id**, with plugga
 
 ## Features
 
-- 🔐 AES-256-GCM encryption with a unique nonce per save
-- 🧂 Key derivation via Argon2id (64 MB RAM, 3 iterations)
-- 🔍 Fuzzy search for website names
-- 🎲 Random password generator (20 chars: letters + digits + symbols)
-- 👁️ Password masking on display
-- 🔑 Master password change
+-  AES-256-GCM encryption with a unique nonce per save
+-  Key derivation via Argon2id (64 MB RAM, 3 iterations)
+-  Fuzzy search for website names
+-  Random password generator (20 chars: letters + digits + symbols)
+-  Password masking on display
+-  Master password change
 - ☁️ Sync vault to/from GitHub (StorageBackend abstraction — add your own backends)
 
 ## Installation
 
-### Linux / macOS
+### Need python on your os/works on every os
 
 ```bash
-git clone https://github.com/saliou198/PwVault.git
-cd PwVault
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+pipx install pwvault
 ```
 
-### Windows
 
-```powershell
-git clone https://github.com/saliou198/PwVault.git
-cd PwVault
-python3 -m venv .venv
-.venv\Scripts\activate
-pip install -e .
-```
 
 ## Usage
 
